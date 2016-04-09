@@ -65,7 +65,7 @@ namespace Fusee.Tutorial.Core
         {
             distance = distance(vec3(mousePosition, 1), modelpos * 0.5 + 0.5);
             
-            gl_FragColor = vec4(modelpos*0.5 + 0.5, 1) * distance;
+            gl_FragColor = vec4(modelpos*0.5 + 0.5, 1) / (distance * 1.5f);
         }";
 
 
