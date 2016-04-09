@@ -4,3 +4,9 @@ D:\Game-Engineering\Fusee\Fusee.Tutorial\Tutorial01\bin\Debug\Libraries\Fusee.Tu
 D:\Game-Engineering\Fusee\Fusee.Tutorial\Tutorial01\tmp\Obj\Fusee.Tutorial.Core\Debug\Fusee.Tutorial01.Core.csprojResolveAssemblyReference.cache
 D:\Game-Engineering\Fusee\Fusee.Tutorial\Tutorial01\tmp\Obj\Fusee.Tutorial.Core\Debug\Fusee.Tutorial.Core.dll
 D:\Game-Engineering\Fusee\Fusee.Tutorial\Tutorial01\tmp\Obj\Fusee.Tutorial.Core\Debug\Fusee.Tutorial.Core.pdb
+D:\Game-Engineering\Fusee\Game_Engineering\Tutorial01\bin\Debug\Libraries\Assets\AboutFuseeAssets.txt
+D:\Game-Engineering\Fusee\Game_Engineering\Tutorial01\bin\Debug\Libraries\Fusee.Tutorial.Core.dll
+D:\Game-Engineering\Fusee\Game_Engineering\Tutorial01\bin\Debug\Libraries\Fusee.Tutorial.Core.pdb
+D:\Game-Engineering\Fusee\Game_Engineering\Tutorial01\tmp\Obj\Fusee.Tutorial.Core\Debug\Fusee.Tutorial01.Core.csprojResolveAssemblyReference.cache
+D:\Game-Engineering\Fusee\Game_Engineering\Tutorial01\tmp\Obj\Fusee.Tutorial.Core\Debug\Fusee.Tutorial.Core.dll
+D:\Game-Engineering\Fusee\Game_Engineering\Tutorial01\tmp\Obj\Fusee.Tutorial.Core\Debug\Fusee.Tutorial.Core.pdb
