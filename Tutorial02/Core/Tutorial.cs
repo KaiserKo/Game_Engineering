@@ -27,8 +27,6 @@ namespace Fusee.Tutorial.Core
         attribute vec3 fuVertex;
         uniform vec2 degrees;
         varying vec3 modelpos;
-        varying mat4 xRotation;
-        varying mat4 yRotation;
         varying vec4 position;
 
         void main()
@@ -39,6 +37,9 @@ namespace Fusee.Tutorial.Core
 
             float s2 = sin(degrees.y);
             float c2 = cos(degrees.y);
+
+            mat4 xRotation;
+            mat4 yRotation;
 
             xRotation = mat4(   1,0,0,0,
                                 0,c,-s,0,
@@ -62,14 +63,14 @@ namespace Fusee.Tutorial.Core
 
         uniform vec2 mousePosition;
         varying vec4 position;
-        float distance;
+        float dist;
         float distanceMultiplier = 1.5;
 
         void main()
         {
-            distance = distance(mousePosition,vec2(position.x, position.y))*distanceMultiplier;
+            dist = distance(mousePosition,vec2(position.x, position.y))*distanceMultiplier;
 
-            gl_FragColor = vec4(modelpos,1) - vec4(distance,distance,distance,1)+1;
+            gl_FragColor = vec4(modelpos,1) - vec4(dist,dist,dist,1)+1.0;
         }";
 
 
