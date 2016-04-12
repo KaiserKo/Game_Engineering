@@ -29,6 +29,7 @@ namespace Fusee.Tutorial.Core
         varying vec3 modelpos;
         varying mat4 xRotation;
         varying mat4 yRotation;
+        varying vec4 position;
 
         void main()
         {
@@ -50,6 +51,7 @@ namespace Fusee.Tutorial.Core
                                 0,0,0,1);
 
             gl_Position = xRotation*yRotation*vec4(fuVertex,1.0);
+            position = gl_Position;
         }";
 
         private const string _pixelShader = @"
@@ -59,13 +61,15 @@ namespace Fusee.Tutorial.Core
         varying vec3 modelpos;
 
         uniform vec2 mousePosition;
+        varying vec4 position;
         float distance;
+        float distanceMultiplier = 1.5;
 
         void main()
         {
-            distance = distance(vec3(mousePosition, 1), modelpos * 0.5 + 0.5);
-            
-            gl_FragColor = vec4(modelpos*0.5 + 0.5, 1) / (distance * 1.5f);
+            distance = distance(mousePosition,vec2(position.x, position.y))*distanceMultiplier;
+
+            gl_FragColor = vec4(modelpos,1) - vec4(distance,distance,distance,1)+1;
         }";
 
 
@@ -135,7 +139,7 @@ namespace Fusee.Tutorial.Core
 
             RC.Render(_mesh);
 
-            _mousePosition = new float2(Mouse.Position.x/Width, Mouse.Position.y/Height);
+            _mousePosition = new float2((1.0f / (Width / 2.0f) * Mouse.Position.x) - 1.0f, (((1.0f / (Height / 2.0f)) * Mouse.Position.y) - 1.0f) * -1.0f);
 
             if (Mouse.LeftButton)
             {
