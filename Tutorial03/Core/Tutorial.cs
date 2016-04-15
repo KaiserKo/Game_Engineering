@@ -1,4 +1,5 @@
 ﻿using Fusee.Base.Common;
+using Fusee.Base.Core;
 using Fusee.Engine.Common;
 using Fusee.Engine.Core;
 using Fusee.Math.Core;
@@ -11,36 +12,43 @@ namespace Fusee.Tutorial.Core
     public class Tutorial : RenderCanvas
     {
         private Mesh _mesh;
-        private const string _vertexShader = @"
-            attribute vec3 fuVertex;
-            uniform float alpha;
-            varying vec3 modelpos;
 
-            void main()
-            {
-                modelpos = fuVertex;
-                float s = sin(alpha);
-                float c = cos(alpha);
-                gl_Position = vec4(0.5 * (fuVertex.x * c - fuVertex.z * s), 
-                                   0.5 *  fuVertex.y, 
-                                   0.5 * (fuVertex.x * s + fuVertex.z * c),
-                                   1.0);
-            }";
+        private IShaderParam _xformParam;
+        private float4x4 _xform;
+        private float _alpha;
+        private float _beta;
+
+        private float _upperArmRotation;
+        private float _forearmRotation;
+        private float _baseRotation;
+        private float _forearmMove = 0.45f;
+
+        private float _rotationSpeed = 0.0f;
+
+        private const string _vertexShader = @"
+        attribute vec3 fuVertex;
+        attribute vec3 fuNormal;
+        uniform mat4 xform;
+        varying vec3 modelpos;
+        varying vec3 normal;
+        void main()
+        {
+            modelpos = fuVertex;
+            normal = fuNormal;
+            gl_Position = xform * vec4(fuVertex, 1.0);
+        }";
 
         private const string _pixelShader = @"
-            #ifdef GL_ES
-                precision highp float;
-            #endif
-            varying vec3 modelpos;
+        #ifdef GL_ES
+            precision highp float;
+        #endif
+        varying vec3 modelpos;
+        varying vec3 normal;
 
-            void main()
-            {
-                gl_FragColor = vec4(modelpos*0.5 + 0.5, 1);
-            }";
-
-
-        private IShaderParam _alphaParam;
-        private float _alpha;
+        void main()
+        {
+            gl_FragColor = vec4(normal*0.5 + 0.5, 1);
+        }";
 
         // Init is called on startup. 
         public override void Init()
@@ -145,11 +153,12 @@ namespace Fusee.Tutorial.Core
 
             var shader = RC.CreateShader(_vertexShader, _pixelShader);
             RC.SetShader(shader);
-            _alphaParam = RC.GetShaderParam(shader, "alpha");
-            _alpha = 0;
+
+            _xformParam = RC.GetShaderParam(shader, "xform");
+            _xform = float4x4.Identity;
 
             // Set the clear color for the backbuffer
-            RC.ClearColor = new float4(0.1f, 0.3f, 0.2f, 1);
+            RC.ClearColor = new float4(0, 0, 0, 1);
         }
 
         // RenderAFrame is called once a frame
@@ -160,10 +169,85 @@ namespace Fusee.Tutorial.Core
 
             float2 speed = Mouse.Velocity + Touch.GetVelocity(TouchPoints.Touchpoint_0);
             if (Mouse.LeftButton || Touch.GetTouchActive(TouchPoints.Touchpoint_0))
-                _alpha += speed.x * 0.0001f;
+            {
+                _alpha -= speed.x * 0.0001f;
+                _beta -= speed.y * 0.0001f;
 
-            RC.SetShaderParam(_alphaParam, _alpha);
+                if (_beta > 3.141592f / 2)
+                    _beta = 3.141592f / 2;
+                if (_beta < -3.141592f / 2)
+                    _beta = -3.141592f / 2;
+            }
 
+            //BaseRotation
+            _baseRotation += Keyboard.ADAxis * 0.05f;
+
+            //Upper Arm Rotation
+            _upperArmRotation += Keyboard.WSAxis * 0.05f;
+            if (_upperArmRotation < -0.6f)
+            {
+                _upperArmRotation = -0.6f;
+            }
+            else if (_upperArmRotation > 3.75f)
+            {
+                _upperArmRotation = 3.75f;
+            }
+
+            //Forearm Rotation
+
+            if (Keyboard.GetKey(KeyCodes.F))
+            {
+                if(_rotationSpeed < 0.5f)
+                {
+                    _rotationSpeed += 0.01f * 0.5f;
+                } else
+                {
+                    _rotationSpeed = 0.5f;
+                }
+
+                _forearmRotation += _rotationSpeed;
+            } else if(_rotationSpeed > 0)
+            {
+                stopRotation();
+                _forearmRotation += _rotationSpeed;
+            }
+           
+            _forearmMove += Keyboard.LeftRightAxis * 0.015f;
+            if(_forearmMove < -0.45f)
+            {
+                _forearmMove = -0.45f;
+            } else if (_forearmMove > 0.45f)
+            {
+                _forearmMove = 0.45f;
+            }
+
+            // Setup matrices
+            var aspectRatio = Width / (float)Height;
+            var projection = float4x4.CreatePerspectiveFieldOfView(3.141592f * 0.25f, aspectRatio, 0.01f, 20);
+            var view = float4x4.CreateTranslation(0, 0, 3) * float4x4.CreateRotationY(_alpha) * float4x4.CreateRotationX(_beta);
+
+            // Plate
+            var plateModel = ModelXForm(new float3(0, -0.8f, 0), new float3(0, 0, 0), new float3(0, 0, 0));
+            _xform = projection * view * plateModel * float4x4.CreateScale(0.5f, 0.05f, 0.5f);
+            RC.SetShaderParam(_xformParam, _xform);
+            RC.Render(_mesh);
+
+            // BaseCube
+            var baseModel = ModelXForm(new float3(0, 0.5f, 0), new float3(0, _baseRotation, 0), new float3(0, -0.5f, 0));
+            _xform = projection * view * plateModel * baseModel * float4x4.CreateScale(0.1f, 0.5f, 0.1f);
+            RC.SetShaderParam(_xformParam, _xform);
+            RC.Render(_mesh);
+
+            // Upper Arm
+            var upperArmModel = ModelXForm(new float3(0.4f, -0.4f, -0.2f), new float3(0, 0, _upperArmRotation), new float3(-0.4f, 0, 0));
+            _xform = projection * view * baseModel * upperArmModel * float4x4.CreateScale(0.5f, 0.1f, 0.1f);
+            RC.SetShaderParam(_xformParam, _xform);
+            RC.Render(_mesh);
+
+            // Forearm
+            var forearmModel = ModelXForm(new float3(_forearmMove, 0, -0.11f), new float3(0, 0, _forearmRotation), new float3(0, 0, 0));
+            _xform = projection * view * baseModel * upperArmModel * forearmModel * float4x4.CreateScale(0.35f, 0.35f, 0.01f);
+            RC.SetShaderParam(_xformParam, _xform);
             RC.Render(_mesh);
 
             // Swap buffers: Show the contents of the backbuffer (containing the currently rendered farame) on the front buffer.
@@ -185,6 +269,26 @@ namespace Fusee.Tutorial.Core
             // Back clipping happens at 2000 (Anything further away from the camera than 2000 world units gets clipped, polygons will be cut)
             var projection = float4x4.CreatePerspectiveFieldOfView(3.141592f * 0.25f, aspectRatio, 1, 20000);
             RC.Projection = projection;
+        }
+
+        static float4x4 ModelXForm(float3 pos, float3 rot, float3 pivot)
+        {
+            return float4x4.CreateTranslation(pos + pivot)
+                   * float4x4.CreateRotationY(rot.y)
+                   * float4x4.CreateRotationX(rot.x)
+                   * float4x4.CreateRotationZ(rot.z)
+                   * float4x4.CreateTranslation(-pivot);
+        }
+
+        void stopRotation()
+        {
+            if(_rotationSpeed > 0)
+            {
+                _rotationSpeed -= 0.01f * 0.5f;
+            } else if(_rotationSpeed <= 0)
+            {
+                _rotationSpeed = 0;
+            }
         }
 
     }
